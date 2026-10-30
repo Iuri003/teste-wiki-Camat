@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Minha Wiki</title>
+    <!-- Importa a biblioteca que converte Markdown para HTML -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f6f6f6;
+            color: #202122;
+        }
+        .article-body a.link-quebrado {
+            color: #ba0000;
+        }
+        .article-body a.link-quebrado:hover {
+            text-decoration: underline;
+        }
+        header {
+            background-color: #fff;
+            padding: 15px 20px;
+            border-bottom: 1px solid #a2a9b1;
+            display: flex;
+            align-items: center;
+        }
+        header h1 {
+            margin: 0;
+            font-size: 1.5em;
+            font-family: serif;
+        }
+        #logo-link {
+            text-decoration: none; /* Tira o sublinhado */
+            color: inherit;        /* Herda a cor preta do título */
+        }
+        #logo-link:hover {
+            color: #0645ad;        /* Fica levemente azul quando passa o mouse (opcional) */
+        }
+        .container {
+            display: flex;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .sidebar {
+            width: 250px;
+            padding: 20px;
+            background-color: #f6f6f6;
+        }
+        .toc {
+            background: #fff;
+            border: 1px solid #a2a9b1;
+            padding: 10px;
+            font-size: 0.9em;
+        }
+        .toc ul { list-style: none; padding-left: 15px; }
+        .toc ul li { margin-bottom: 5px; }
+        .toc a { color: #0645ad; text-decoration: none; }
+        .toc a:hover { text-decoration: underline; }
+        
+        .main-content {
+            flex-grow: 1;
+            background-color: #fff;
+            padding: 20px 40px;
+            border-left: 1px solid #a2a9b1;
+            border-right: 1px solid #a2a9b1;
+            min-height: 100vh;
+        }
+        .tabs {
+            border-bottom: 1px solid #a2a9b1;
+            margin-bottom: 20px;
+        }
+        .tab-btn {
+            background: transparent;
+            border: none;
+            padding: 10px 15px;
+            font-size: 1em;
+            cursor: pointer;
+            color: #0645ad;
+        }
+        .tab-btn.active {
+            border-bottom: 3px solid #36c;
+            color: #202122;
+            font-weight: bold;
+        }
+        .article-body h1, .article-body h2 {
+            border-bottom: 1px solid #a2a9b1;
+            padding-bottom: 5px;
+            font-family: "Linux Libertine", "Georgia", "Times", serif;
+        }
+        .article-body a { color: #0645ad; text-decoration: none; }
+        .article-body a:hover { text-decoration: underline; }
+        .article-body img { max-width: 100%; height: auto; border: 1px solid #ccc; }
+
+        /* Estilos da barra de busca */
+        .search-container {
+            position: relative;
+            margin-left: auto; /* Joga a busca para o lado direito */
+        }
+        #input-busca {
+            padding: 8px 12px;
+            width: 250px;
+            border: 1px solid #a2a9b1;
+            border-radius: 2px;
+            font-size: 0.9em;
+        }
+        .search-results {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: #fff;
+            border: 1px solid #a2a9b1;
+            max-height: 350px;
+            overflow-y: auto;
+            display: none; /* Fica escondido até buscar */
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            z-index: 1000;
+        }
+        .search-results a {
+            display: block;
+            padding: 10px;
+            text-decoration: none;
+            color: #0645ad;
+            border-bottom: 1px solid #eaecf0;
+        }
+        .search-results a:hover {
+            background-color: #f6f6f6;
+        }
+        .search-results a strong {
+            display: block;
+            color: #202122;
+        }
+        .search-results a span {
+            display: block;
+            font-size: 0.8em;
+            color: #54595d;
+            margin-top: 4px;
+            line-height: 1.3;
+        }
+        /* Destaque da palavra pesquisada */
+        .highlight {
+            background-color: #ffe49c;
+            font-weight: bold;
+        }
+        /* --- RESPONSIVIDADE (Celulares e Tablets) --- */
+        @media (max-width: 768px) {
+            /* Empilha o índice e o conteúdo principal */
+            .container {
+                flex-direction: column;
+            }
+            
+            /* Ajusta o cabeçalho para acomodar a busca na linha de baixo */
+            header {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 15px;
+            }
+
+            /* A barra de busca passa a ocupar 100% da largura */
+            .search-container {
+                margin-left: 0;
+                width: 100%;
+            }
+            #input-busca {
+                width: 100%;
+                box-sizing: border-box; /* Garante que o padding não quebre a tela */
+            }
+
+            /* O índice lateral vira um bloco no topo do artigo */
+            .sidebar {
+                width: 100%;
+                padding: 15px;
+                box-sizing: border-box;
+                border-bottom: 1px solid #a2a9b1;
+            }
+
+            /* Reduz o espaço em branco nas laterais do texto */
+            .main-content {
+                padding: 15px;
+                border-left: none;
+                border-right: none;
+            }
+
+            /* Estica os botões de abas para facilitar o toque com o dedo */
+            .tabs {
+                display: flex;
+            }
+            .tab-btn {
+                flex: 1;
+                text-align: center;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1><a href="#inicio" id="logo-link">Wiki do CAMat</a></h1>
+        <div class="search-container">
+            <input type="text" id="input-busca" placeholder="Buscar na wiki..." oninput="realizarBusca()">
+            <div id="resultados-busca" class="search-results"></div>
+        </div>
+    </header>
+
+    <div class="container">
+        <!-- Barra lateral com o Índice -->
+        <aside class="sidebar">
+            <div class="toc" id="toc-container">
+                <strong>Índice</strong>
+                <div id="toc-list"></div>
+            </div>
+        </aside>
+
+        <!-- Conteúdo principal -->
+        <main class="main-content">
+            <div class="tabs">
+                <button class="tab-btn active" id="btn-artigo" onclick="carregarAba('artigo')">Artigo</button>
+                <button class="tab-btn" id="btn-discussao" onclick="carregarAba('discussao')">Discussão</button>
+            </div>
+
+            <div id="loading" style="display: none;">Carregando...</div>
+            
+            <div class="article-body" id="article-content">
+                <!-- O conteúdo convertido do markdown aparecerá aqui -->
+            </div>
+        </main>
+    </div>
+    
+    <script>
+        const contentDiv = document.getElementById('article-content');
+        const tocList = document.getElementById('toc-list');
+        const loadingDiv = document.getElementById('loading');
+        
+        let abaAtual = 'artigo';
+
+        // Função que lê a URL e carrega o arquivo correto da pasta 'artigos/'
+        async function carregarPagina() {
+            // Pega a palavra depois do #. Se não tiver nada, carrega 'inicio'
+            let paginaId = window.location.hash.substring(1) || 'inicio';
+            
+            loadingDiv.style.display = 'block';
+            contentDiv.innerHTML = '';
+            tocList.innerHTML = '';
+
+            // Decide qual arquivo buscar (ex: inicio.md ou discussao_inicio.md)
+            let nomeArquivo = abaAtual === 'artigo' ? `${paginaId}.md` : `discussao_${paginaId}.md`;
+
+            try {
+                // Tenta buscar o arquivo na pasta
+                const resposta = await fetch(`artigos/${nomeArquivo}`);
+                
+                if (!resposta.ok) throw new Error('Arquivo não encontrado');
+                
+                const textoMarkdown = await resposta.text();
+                
+                // Converte markdown em HTML usando a biblioteca 'marked'
+                contentDiv.innerHTML = marked.parse(textoMarkdown);
+
+                pintarLinksQuebrados();
+                
+                // Se for a aba de artigo, gera o índice lateral
+                if (abaAtual === 'artigo') {
+                    gerarIndice();
+                }
+            } catch (erro) {
+                contentDiv.innerHTML = `
+                    <h2>Página não encontrada</h2>
+                    <p>O arquivo <code>artigos/${nomeArquivo}</code> não existe ainda.</p>
+                    <p>Para criar esta página, basta adicionar um arquivo com esse nome na pasta <strong>artigos/</strong>.</p>
+                `;
+            } finally {
+                loadingDiv.style.display = 'none';
+            }
+        }
+
+        // Função para alternar entre Artigo e Discussão
+        function carregarAba(aba) {
+            abaAtual = aba;
+            
+            // Muda o estilo dos botões
+            document.getElementById('btn-artigo').classList.toggle('active', aba === 'artigo');
+            document.getElementById('btn-discussao').classList.toggle('active', aba === 'discussao');
+            
+            // Esconde o índice se estiver na discussão
+            document.getElementById('toc-container').style.display = (aba === 'artigo') ? 'block' : 'none';
+            
+            carregarPagina();
+        }
+        // Função que verifica quais links ainda não têm arquivo .md
+        async function pintarLinksQuebrados() {
+            // Pega todos os links dentro do artigo que começam com '#'
+            const links = contentDiv.querySelectorAll('a[href^="#"]');
+            
+            for (let link of links) {
+                const destino = link.getAttribute('href').substring(1);
+                
+                // Pula links vazios
+                if (!destino) continue;
+
+                try {
+                    // O método 'HEAD' apenas pergunta se o arquivo existe, sem baixar o texto dele
+                    const resposta = await fetch(`artigos/${destino}.md`, { method: 'HEAD' });
+                    
+                    // Se o servidor responder com erro 404 (não encontrado), pinta de vermelho
+                    if (!resposta.ok) {
+                        link.classList.add('link-quebrado');
+                    }
+                } catch (erro) {
+                    // Se falhar, pinta de vermelho também
+                    link.classList.add('link-quebrado');
+                }
+            }
+        }
+
+        // Função para gerar o índice dinamicamente lendo os títulos do texto
+        function gerarIndice() {
+            const titulos = contentDiv.querySelectorAll('h2, h3');
+            let ul = document.createElement('ul');
+            
+            titulos.forEach((titulo, index) => {
+                // Cria um ID único para a âncora funcionar
+                const id = 'secao-' + index;
+                titulo.id = id;
+
+                let li = document.createElement('li');
+                li.style.marginLeft = titulo.tagName === 'H3' ? '15px' : '0';
+                
+                let a = document.createElement('a');
+                a.href = '#' + window.location.hash.substring(1) + '-' + id; // Só para não mudar o hash principal
+                a.onclick = (e) => {
+                    e.preventDefault();
+                    titulo.scrollIntoView({ behavior: 'smooth' });
+                };
+                a.textContent = titulo.textContent;
+                
+                li.appendChild(a);
+                ul.appendChild(li);
+            });
+            tocList.appendChild(ul);
+        }
+
+        // Escuta as mudanças no hash da URL (quando clica em um link)
+        window.addEventListener('hashchange', () => {
+            abaAtual = 'artigo'; // Reseta para a aba artigo
+            document.getElementById('btn-artigo').classList.add('active');
+            document.getElementById('btn-discussao').classList.remove('active');
+            document.getElementById('toc-container').style.display = 'block';
+            carregarPagina();
+        });
+
+        // Carrega a primeira página quando o site abre
+        carregarPagina();
+
+        // --- SISTEMA DE BUSCA ---
+
+        // 1. Liste aqui o nome de todos os arquivos .md que vocês criarem (sem o .md)
+        const listaDeArtigosExistentes = ['inicio', 'eletrico', 'comissoes'];
+
+        let bancoDeDadosLocal = [];
+        let indexCarregado = false;
+
+        // Função que baixa o texto dos artigos e guarda na memória para a busca ser instantânea
+        async function prepararBancoDeBusca() {
+            if (indexCarregado) return; // Se já carregou, não faz de novo
+            
+            for (let id of listaDeArtigosExistentes) {
+                try {
+                    const resposta = await fetch(`artigos/${id}.md`);
+                    if (resposta.ok) {
+                        let texto = await resposta.text();
+                        
+                        // Tenta descobrir o título da página lendo o primeiro "# Título" do markdown
+                        let titulo = id;
+                        let matchTitulo = texto.match(/^#\s+(.*)/m);
+                        if (matchTitulo) titulo = matchTitulo[1];
+
+                        // Salva na memória do navegador
+                        bancoDeDadosLocal.push({
+                            id: id,
+                            titulo: titulo,
+                            conteudo: texto,
+                            conteudoLimpo: texto.toLowerCase() // Para facilitar a busca
+                        });
+                    }
+                } catch (e) {
+                    console.log("Erro ao carregar artigo para a busca:", id);
+                }
+            }
+            indexCarregado = true;
+        }
+
+        // Função executada toda vez que o usuário digita uma letra
+        async function realizarBusca() {
+            const termo = document.getElementById('input-busca').value.toLowerCase().trim();
+            const caixaResultados = document.getElementById('resultados-busca');
+
+            // Só busca se tiver pelo menos 2 letras
+            if (termo.length < 2) {
+                caixaResultados.style.display = 'none';
+                return;
+            }
+
+            // Garante que os arquivos foram lidos
+            await prepararBancoDeBusca();
+
+            // Filtra os artigos que contém a palavra no título OU no texto
+            const resultados = bancoDeDadosLocal.filter(artigo => {
+                return artigo.titulo.toLowerCase().includes(termo) || 
+                    artigo.conteudoLimpo.includes(termo);
+            });
+
+            // Exibe os resultados
+            if (resultados.length > 0) {
+                caixaResultados.innerHTML = resultados.map(artigo => {
+                    let trecho = extrairTrecho(artigo.conteudo, termo);
+                    return `
+                        <a href="#${artigo.id}" onclick="fecharBusca()">
+                            <strong>${artigo.titulo}</strong>
+                            <span>${trecho}</span>
+                        </a>
+                    `;
+                }).join('');
+            } else {
+                caixaResultados.innerHTML = '<div style="padding: 10px; color: #72777d;">Nenhum resultado encontrado.</div>';
+            }
+            
+            caixaResultados.style.display = 'block';
+        }
+
+        // Função para pegar as palavras antes e depois do termo pesquisado (para mostrar o contexto)
+        function extrairTrecho(textoOriginal, termo) {
+            const textoLimpo = textoOriginal.toLowerCase();
+            const indice = textoLimpo.indexOf(termo);
+            
+            if (indice === -1) return ''; // Se a palavra só tava no título
+
+            // Pega uns 30 caracteres antes e uns 50 depois da palavra encontrada
+            const inicio = Math.max(0, indice - 30);
+            const fim = Math.min(textoOriginal.length, indice + termo.length + 50);
+            
+            let trecho = textoOriginal.substring(inicio, fim).replace(/[\n\r#*`]/g, ' ');
+            
+            // Marca a palavra buscada com a classe highlight (fundo amarelo)
+            const regex = new RegExp(`(${termo})`, "gi");
+            trecho = trecho.replace(regex, "<span class='highlight'>$1</span>");
+            
+            return `...${trecho}...`;
+        }
+
+        function fecharBusca() {
+            document.getElementById('resultados-busca').style.display = 'none';
+            document.getElementById('input-busca').value = '';
+        }
+
+        // Fecha a caixa de busca se o usuário clicar em qualquer outro lugar da tela
+        document.addEventListener('click', (evento) => {
+            if (!evento.target.closest('.search-container')) {
+                fecharBusca();
+            }
+        });
+    </script>
+</body>
+</html>
