@@ -32,6 +32,13 @@
             font-size: 1.5em;
             font-family: serif;
         }
+        #logo-link {
+            text-decoration: none; /* Tira o sublinhado */
+            color: inherit;        /* Herda a cor preta do título */
+        }
+        #logo-link:hover {
+            color: #0645ad;        /* Fica levemente azul quando passa o mouse (opcional) */
+        }
         .container {
             display: flex;
             max-width: 1200px;
@@ -191,7 +198,7 @@
 <body>
 
     <header>
-        <h1>Wiki do CAMat</h1>
+        <h1><a href="#inicio" id="logo-link">Wiki do CAMat</a></h1>
         <div class="search-container">
             <input type="text" id="input-busca" placeholder="Buscar na wiki..." oninput="realizarBusca()">
             <div id="resultados-busca" class="search-results"></div>
