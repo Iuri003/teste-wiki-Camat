@@ -5,8 +5,17 @@ Esta é a página inicial. O site está puxando este texto diretamente de um arq
 ## Como navegar
 Para criar um link para outra página, use o formato padrão do Markdown apontando para o hash.
 
-## Algumas páginas de exemplo
+## Páginas que já existem
 
-* [Comissões](#comissoes)
-* [Membros](#membros)
-* [Reuniões](#reunioes)
+* [Comissões](#comissoes) (Citado como #comissoes)
+* [Membros](#membros) (Citado como #membros)
+* [Reuniões](#reunioes) (Citado como #reunioes)
+
+
+
+
+
+
+
+
+
